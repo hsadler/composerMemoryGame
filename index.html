@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.5.0/pure-min.css">
+
+    <script src="https://rawgithub.com/ai/autoprefixer-rails/master/vendor/autoprefixer.js"></script>
+    <script src="http://modernizr.com/downloads/modernizr-latest.js"></script>
+    <style type="unprocessed" id="AutoprefixerIn">
+
+body{
+  background: url(http://subtlepatterns.com/patterns/binding_dark.png);
+}
+
+iframe {
+  width: 100%;
+  height: 550px;
+}
+
+.button-blue {
+  color: white;
+  background: #3BA6C7;
+}
+
+
+/****GAME CSS ****/
+#gameStartOverlay, #gameEndOverlay, #composerInfoOverlay {
+  position:fixed;
+  top:0;
+  left:0;
+  background:rgba(0,0,0,0.7);
+  z-index:5;
+  width:100%;
+  height:100%;
+  padding: 30px 0 0 0;
+}
+
+#gameStartOverlay p, #gameStartOverlay h1,
+#gameEndOverlay p, #gameEndOverlay h1,
+#composerInfoOverlay p, #composerInfoOverlay h1 {
+  text-align: center;
+  color: white;
+}
+
+#gameStartOverlay h1, #gameEndOverlay h1,
+#composerInfoOverlay h1 {
+  font-size: 50px;
+  margin: 48px 10px 0 10px;
+}
+
+#gameStartOverlay p, #gameEndOverlay p,
+#composerInfoOverlay p {
+  margin: 30px 40px 40px 40px;
+}
+
+#gameStartOverlay input, #gameEndOverlay input
+/*#composerInfoOverlay input*/ {
+  display: block;
+  margin: 0 auto;
+  font-size: 34px;
+  padding: 20px 30px;
+}
+
+#cardGameWrapper, #composerIframeWrapper {
+  max-width: 655px;
+  margin: 30px auto 0 auto;
+}
+
+#gameBoard {
+  border: 1px solid gray;
+  border-radius: 28px;
+  background: #E0EEEE;
+  border-spacing: 10px;
+  border-collapse: separate;
+  margin: 30px auto 0 auto;
+  padding: 10px;
+}
+
+#gameBoard td {
+  width: 88px;
+  height: 88px;
+  background-size: 90px;
+  background-repeat: no-repeat;
+  border-radius: 20px;
+}
+
+#gameBoard td:hover {
+  cursor: pointer;
+  box-shadow: 0px 1px 2px 1px rgba(0,0,0,0.5);
+}
+
+#gameHeaderWrapper {
+  width: 100%;
+  height: 150px;
+  padding: 30px 0 6px 0;
+}
+
+#gameHeaderWrapper h1, #gameHeaderWrapper p {
+  color: white;
+  text-align: center;
+  margin: 0px auto 0 auto;
+}
+
+#gameHeaderWrapper h1 {
+  font-size: 50px;
+}
+
+#composerLearnMore { /*learn more button*/
+  font-size: 15px;
+  display: block;
+  margin: 22px auto;
+  padding: 14px;
+}
+
+#composerAudioWrapper {
+  text-align: center;
+  margin: 30px 0 20px 0;
+}
+
+#composerAudio {
+  display: inline-block;
+  text-align: center;
+}
+
+#restartGameLink, #closeInfo {
+  text-align: center;
+  margin: 20px auto 0 auto;
+  font-size: 15px;
+  color: white;
+  display: block;
+}
+
+#closeInfo {
+  padding: 14px;
+}
+
+#turnCounter {
+  position: absolute;
+  color: white;
+  left: 5px;
+  top: 5px;
+  font-size: 11px;
+  letter-spacing: .5px;
+}
+
+
+/**** FLIP CSS ****/
+/* entire container, keeps perspective */
+.flip-container {
+  perspective: 1000;
+  display: block;
+}
+
+/* flip the pane when given class "flip" */
+.flip-container.flip .flipper {
+  transform: rotateY(180deg);
+}
+
+.flip-container, .card-front, .card-back {
+  width: 88px;
+  height: 88px;
+}
+
+/* flip speed goes here */
+.flipper {
+  transition: 0.4s;
+  transform-style: preserve-3d;
+  position: relative;
+}
+
+/* hide back of pane during swap */
+.card-front, .card-back {
+  border-radius: 20px;
+  backface-visibility: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-size: 90px;
+  background-repeat: no-repeat;
+}
+
+/* front pane, placed above back */
+.card-front {
+  z-index: 2;
+  transform: rotateY(0deg);
+}
+
+/* back, initially hidden pane */
+.card-back {
+  transform: rotateY(180deg);
+}
+
+/**** UTILITY CSS ****/
+.hide {
+  display: none;
+}
+
+
+
+
+</style>
+    <style id="AutoprefixerOut"></style>
+    <script src="http://code.jquery.com/jquery-git2.js"></script>
+    <script>
+      AutoprefixerSettings = ""; //Specify here the browsers you want to target or leave empty
+      document.getElementById("AutoprefixerOut").innerHTML = autoprefixer(AutoprefixerSettings || null).process(document.getElementById("AutoprefixerIn").innerHTML).css;
+    </script>
+
+    <meta name="description" content="memory game" />
+    <meta charset="utf-8">
+    <title>Memory Game</title>
+
+  </head>
+  <body>
+
+    <div class="hide" id="turnCounterWrapper">
+      <span id="turnCounter">turn: 1</span>
+    </div>
+
+    <!-- GAME START OVERLAY -->
+    <div class="" id="gameStartOverlay">
+      <h1>Music Memory Game</h1>
+      <p>Find the composers!</p>
+      <input class="pure-button button-blue" id="newGameButton" type="button" value="START" onclick="newGame();">
+    </div>
+
+    <!-- COMPOSER INFO OVERLAY -->
+    <div class="hide" id="composerInfoOverlay">
+
+      <h1 id = "composerNameInfo">Composer Name here..</h1>
+
+      <div id="composerAudioWrapper">
+        <audio controls="controls" id="composerAudio" src="">
+        </audio>
+      </div>
+
+      <div id="composerIframeWrapper">
+        <iframe id="composerIframe" src=""></iframe>
+      </div>
+
+      <input class="pure-button button-blue" id="closeInfo" type="button" value="back to game" onclick="closeComposerInfo();">
+
+    </div>
+
+    <!-- END GAME OVERLAY -->
+    <div class="hide" id="gameEndOverlay">
+      <h1>You Win!</h1>
+      <p id="endGameTurnMessage">Completed in X turns!</p>
+      <input class="pure-button button-blue" id="newGameButton" type="button" value="PLAY AGAIN" onclick="newGame();">
+    </div>
+
+    <!-- THE GAME -->
+    <div id="cardGameWrapper">
+
+      <div id="gameHeaderWrapper">
+        <div class="hide" id="composerHeaderHider"><!--for hiding header-->
+
+          <p id="composerHeaderSubhead">&nbsp;</p>
+          <h1 id="composerName">Find the Composers!</h1>
+
+          <div id="learnMoreWrapper">
+            <input class="pure-button button-blue" id="composerLearnMore" type="button" value="learn more" onclick="showComposerOverlayInfo()">
+          </div>
+
+        </div>
+      </div>
+
+      <!--all tds are classed "gameCard" via js-->
+      <!--all tds are given attr "data-card = 1,2,3, etc via js"-->
+      <!--flip div html added to table datas via js-->
+      <table class="" id="gameBoard">
+        <tr>
+          <td id="card1"></td>
+          <td id="card2"></td>
+          <td id="card3"></td>
+          <td id="card4"></td>
+          <td id="card5"></td>
+          <td id="card6"></td>
+        </tr>
+        <tr>
+          <td id="card7"></td>
+          <td id="card8"></td>
+          <td id="card9"></td>
+          <td id="card10"></td>
+          <td id="card11"></td>
+          <td id="card12"></td>
+        </tr>
+        <tr>
+          <td id="card13"></td>
+          <td id="card14"></td>
+          <td id="card15"></td>
+          <td id="card16"></td>
+          <td id="card17"></td>
+          <td id="card18"></td>
+        </tr>
+        <tr>
+          <td id="card19"></td>
+          <td id="card20"></td>
+          <td id="card21"></td>
+          <td id="card22"></td>
+          <td id="card23"></td>
+          <td id="card24"></td>
+        </tr>
+        <tr>
+          <td id="card25"></td>
+          <td id="card26"></td>
+          <td id="card27"></td>
+          <td id="card28"></td>
+          <td id="card29"></td>
+          <td id="card30"></td>
+        </tr>
+      </table>
+
+      <div id="restartWrapper" class="hide">
+        <a id="restartGameLink" href="javascript:void(0);" onClick="newGame()">restart game</a>
+      </div>
+
+    </div>
+  <script id="jsbin-javascript">
+////// GAMEBOARD SETUP CODE ///////
+
+// initial card image
+var initCard = "http://i.imgur.com/IiwRxCo.jpg";
+
+//add class to table datas: "gameCard"
+$('#gameBoard').find('td').addClass("gameCard");
+
+//add flip div html to table datas
+$('.gameCard').html('<div class="flip-container"><div class="flipper"><div class="card-front"></div><div class="card-back"></div></div></div>');
+
+//save audio location
+var composerAudio = document.getElementById("composerAudio");
+
+// declare variables
+var turn = 1;
+var playerTotalTurns = 0;
+var firstCardLoc = 0;
+var secondCardLoc = 0;
+var firstCardName = "";
+var secondCardName = "";
+var firstCardObj = {};
+var secondCardObj = {};
+var cardsFound = 0;
+var win = false;
+
+function initializeGameVariables() {
+  turn = 1;
+  playerTotalTurns = 0;
+  firstCardLoc = 0;
+  secondCardLoc = 0;
+  firstCardName = "";
+  secondCardName = "";
+  firstCardObj = {};
+  secondCardObj = {};
+  cardsFound = 0;
+  win = false;
+}
+
+// for card hide timing and force user to wait
+var timeoutID;
+var waitForGame = false;
+
+function waitForGameFalse() {
+  waitForGame = false;
+}
+
+// 18 pairs of cards to be used on the board
+var memoryCardDeck = [
+  {
+    cardImg: 'http://i.imgur.com/QCrrHXrs.jpg',
+    cardName: 'Pyotr Ilyich Tchaikovsky',
+    cardWiki: 'http://en.wikipedia.org/wiki/Pyotr_Ilyich_Tchaikovsky',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/commons/2/2d/Tchaikovsky%2C_Pyotr_Ilyich_-_Twelve_Pieces_for_piano%2C_Opus_40_%28extract%29.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/QCrrHXrs.jpg',
+    cardName: 'Pyotr Ilyich Tchaikovsky',
+    cardWiki: 'http://en.wikipedia.org/wiki/Pyotr_Ilyich_Tchaikovsky',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/commons/2/2d/Tchaikovsky%2C_Pyotr_Ilyich_-_Twelve_Pieces_for_piano%2C_Opus_40_%28extract%29.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/exw1xths.jpg',
+    cardName: 'Edward Elgar',
+    cardWiki: 'http://en.wikipedia.org/wiki/Edward_Elgar',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/commons/e/e4/Pomp_and_circumstances_No._1.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/exw1xths.jpg',
+    cardName: 'Edward Elgar',
+    cardWiki: 'http://en.wikipedia.org/wiki/Edward_Elgar',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/commons/e/e4/Pomp_and_circumstances_No._1.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/WIuaMjjs.jpg',
+    cardName: 'Johannes Brahms',
+    cardWiki: 'http://en.wikipedia.org/wiki/Johannes_Brahms',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/commons/7/75/Brahms-waltz01.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/WIuaMjjs.jpg',
+    cardName: 'Johannes Brahms',
+    cardWiki: 'http://en.wikipedia.org/wiki/Johannes_Brahms',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/commons/7/75/Brahms-waltz01.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/URAu3s3s.jpg',
+    cardName: 'Richard Wagner',
+    cardWiki: 'http://en.wikipedia.org/wiki/Richard_Wagner',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/commons/7/73/Richard_Wagner_-_Tristan_und_Isolde_-_Vorspiel.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/URAu3s3s.jpg',
+    cardName: 'Richard Wagner',
+    cardWiki: 'http://en.wikipedia.org/wiki/Richard_Wagner',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/commons/7/73/Richard_Wagner_-_Tristan_und_Isolde_-_Vorspiel.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/Fj971cJs.jpg',
+    cardName: 'Giuseppe Verdi',
+    cardWiki: 'http://en.wikipedia.org/wiki/Giuseppe_Verdi',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/commons/5/5a/La_Donna_E_Mobile_Rigoletto.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/Fj971cJs.jpg',
+    cardName: 'Giuseppe Verdi',
+    cardWiki: 'http://en.wikipedia.org/wiki/Giuseppe_Verdi',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/commons/5/5a/La_Donna_E_Mobile_Rigoletto.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/HqAl3Tos.jpg',
+    cardName: 'Wolfgang Amadeus Mozart',
+    cardWiki: 'http://en.wikipedia.org/wiki/Wolfgang_Amadeus_Mozart',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/commons/9/99/Wolfgang_Amadeus_Mozart_-_Symphony_40_g-moll_-_1._Molto_allegro.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/HqAl3Tos.jpg',
+    cardName: 'Wolfgang Amadeus Mozart',
+    cardWiki: 'http://en.wikipedia.org/wiki/Wolfgang_Amadeus_Mozart',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/commons/9/99/Wolfgang_Amadeus_Mozart_-_Symphony_40_g-moll_-_1._Molto_allegro.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/mqC1jxJs.jpg',
+    cardName: 'Frédéric Chopin',
+    cardWiki: 'http://en.wikipedia.org/wiki/Fr%C3%A9d%C3%A9ric_Chopin',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/commons/d/d8/Chopin_Prelude_Op_28_N_15_Giorgi_Latsabidze_performs.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/mqC1jxJs.jpg',
+    cardName: 'Frédéric Chopin',
+    cardWiki: 'http://en.wikipedia.org/wiki/Fr%C3%A9d%C3%A9ric_Chopin',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/commons/d/d8/Chopin_Prelude_Op_28_N_15_Giorgi_Latsabidze_performs.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/HJ5CD92s.jpg',
+    cardName: 'Ludwig van Beethoven',
+    cardWiki: 'http://en.wikipedia.org/wiki/Ludwig_van_Beethoven',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/commons/e/eb/Beethoven_Moonlight_1st_movement.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/HJ5CD92s.jpg',
+    cardName: 'Ludwig van Beethoven',
+    cardWiki: 'http://en.wikipedia.org/wiki/Ludwig_van_Beethoven',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/commons/e/eb/Beethoven_Moonlight_1st_movement.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/CPGPMK6s.jpg',
+    cardName: 'Claudio Monteverdi',
+    cardWiki: 'http://en.wikipedia.org/wiki/Claudio_Monteverdi',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/commons/3/3d/Orfeo_-_Toccata.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/CPGPMK6s.jpg',
+    cardName: 'Claudio Monteverdi',
+    cardWiki: 'http://en.wikipedia.org/wiki/Claudio_Monteverdi',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/commons/3/3d/Orfeo_-_Toccata.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/iKNMyf2s.jpg',
+    cardName: 'Joseph Haydn',
+    cardWiki: 'http://en.wikipedia.org/wiki/Joseph_Haydn',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/commons/1/12/The_Clock.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/iKNMyf2s.jpg',
+    cardName: 'Joseph Haydn',
+    cardWiki: 'http://en.wikipedia.org/wiki/Joseph_Haydn',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/commons/1/12/The_Clock.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/UjcGnLMs.jpg',
+    cardName: 'George Frideric Handel',
+    cardWiki: 'http://en.wikipedia.org/wiki/George_Frideric_Handel',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/commons/c/ce/Handel_-_messiah_-_44_hallelujah.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/UjcGnLMs.jpg',
+    cardName: 'George Frideric Handel',
+    cardWiki: 'http://en.wikipedia.org/wiki/George_Frideric_Handel',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/commons/c/ce/Handel_-_messiah_-_44_hallelujah.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/ZLzrqGes.jpg',
+    cardName: 'Antonín Dvořák',
+    cardWiki: 'http://en.wikipedia.org/wiki/Anton%C3%ADn_Dvo%C5%99%C3%A1k',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/commons/0/01/Dvo%C5%99%C3%A1k_-_Romance_Op._75_No._2.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/ZLzrqGes.jpg',
+    cardName: 'Antonín Dvořák',
+    cardWiki: 'http://en.wikipedia.org/wiki/Anton%C3%ADn_Dvo%C5%99%C3%A1k',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/commons/0/01/Dvo%C5%99%C3%A1k_-_Romance_Op._75_No._2.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/J5qT07vs.jpg',
+    cardName: 'Johann Sebastian Bach',
+    cardWiki: 'http://en.wikipedia.org/wiki/Johann_Sebastian_Bach',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/commons/d/d6/Brandenburg_No4-1_BWV1049.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/J5qT07vs.jpg',
+    cardName: 'Johann Sebastian Bach',
+    cardWiki: 'http://en.wikipedia.org/wiki/Johann_Sebastian_Bach',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/commons/d/d6/Brandenburg_No4-1_BWV1049.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/5IXhtyes.jpg',
+    cardName: 'Sergei Rachmaninoff',
+    cardWiki: 'http://en.wikipedia.org/wiki/Sergei_Rachmaninoff',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/en/2/2c/Rachmaninoff_-_Vocalise_transcribed_for_Violin_and_Piano.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/5IXhtyes.jpg',
+    cardName: 'Sergei Rachmaninoff',
+    cardWiki: 'http://en.wikipedia.org/wiki/Sergei_Rachmaninoff',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/en/2/2c/Rachmaninoff_-_Vocalise_transcribed_for_Violin_and_Piano.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/NBQHe2ws.jpg',
+    cardName: 'Gustav Mahler',
+    cardWiki: 'http://en.wikipedia.org/wiki/Gustav_Mahler',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/commons/d/d8/Mahler_Symphony_No_6_Andante_Moderato.ogg'
+  },
+  {
+    cardImg: 'http://i.imgur.com/NBQHe2ws.jpg',
+    cardName: 'Gustav Mahler',
+    cardWiki: 'http://en.wikipedia.org/wiki/Gustav_Mahler',
+    cardAudio: 'http://upload.wikimedia.org/wikipedia/commons/d/d8/Mahler_Symphony_No_6_Andante_Moderato.ogg'
+  }
+];
+
+var cardsInDeck = memoryCardDeck.length; //length for loops
+
+function addMemDeckParams () {
+  var cardTypeCounter = 1;
+  for (i = 0; i < cardsInDeck; i++) {
+    memoryCardDeck[i].cardWiki += "?printable=yes";
+    memoryCardDeck[i].cardLoc = 0;
+    memoryCardDeck[i].cardType = cardTypeCounter;
+    if ( (i + 2) % 2 !== 0 ) {
+      cardTypeCounter++;
+    }
+  }
+}
+addMemDeckParams();
+
+//console.log(memoryCardDeck);
+
+//set param cardFound to false
+function setCardFoundFalse () {
+  for (i = 0; i < cardsInDeck; i++) {
+    memoryCardDeck[i].cardFound = false;
+  }
+}
+
+/////// GAME START CODE ///////
+
+//shuffle array method added to Array prototype
+//shuffle with myArrayHere.shuffle();
+Array.prototype.shuffle = function (){
+    var i = this.length, j, temp;
+    if ( i === 0 ) return;
+    while ( --i ) {
+        j = Math.floor( Math.random() * ( i + 1 ) );
+        temp = this[i];
+        this[i] = this[j];
+        this[j] = temp;
+    }
+};
+
+// set card locations in object array, set data-card in html, set IDs of flipping divs
+function setCardData() {
+  var cardID = "";
+  for(i = 0; i < cardsInDeck; i++) { //setting card locations here..
+    cardID = "#card" + (i + 1);
+    memoryCardDeck[i].cardLoc = (i + 1); //setting card location
+    $(cardID).data("card", (i + 1)); //setting html "data-card" here..
+    $(cardID).find('.card-front').attr('id', "cardFront" + (i + 1)); //setting flipping div IDs here..
+    $(cardID).find('.card-back').attr('id', "cardBack" + (i + 1));
+  }
+}
+
+//set question mark image card fronts
+function setCardImagesFront() {
+  $('.card-front').css("background-image", "url(" + initCard + ")");
+}
+setCardImagesFront();
+
+function setCardImagesBack() {
+  var cardFrontID = "";
+  var cardImage = "";
+  for(i = 0; i < cardsInDeck; i++) {
+    cardFrontID = "#cardBack" + (i + 1);
+    cardImage = memoryCardDeck[i].cardImg;
+    $(cardFrontID).css("background-image", "url(" + cardImage + ")");
+  }
+}
+
+function showAllCards () {
+  $('.flip-container').addClass('flip');
+}
+
+function hideAllCards() {
+  $('.flip-container').removeClass('flip');
+}
+
+function initHeaderInfo () {
+  $('#gameEndOverlay').addClass('hide');
+  $('#restartWrapper').removeClass('hide');
+  $('#composerHeaderHider').removeClass("hide");
+  $('#gameStartOverlay').addClass('hide');
+  $('#composerHeaderSubhead').html("&nbsp;");
+  $('#composerName').html("Find the Composers!");
+  $('#learnMoreWrapper').addClass("hide");
+  $('#turnCounterWrapper').removeClass("hide");
+  $('#turnCounter').html("turn: " + (playerTotalTurns + 1) );
+}
+
+///////////// main game start function ///////////////
+function newGame() {
+  waitForGame = true;
+
+  memoryCardDeck.shuffle(); //shuffle deck
+
+  initializeGameVariables(); //initialize variables
+
+  initHeaderInfo(); // set header info
+
+  setCardData(); //set card data
+
+  setCardFoundFalse(); //initialize "cardFound" boolean parameter
+
+  hideAllCards(); //hide cards
+
+  timeoutID = window.setTimeout(setCardImagesBack, 200); //initialize card images (wait till cards hidden)
+  setCardImagesFront();
+
+  timeoutID = window.setTimeout(showAllCards, 500); //show all cards, then hide
+  timeoutID = window.setTimeout(hideAllCards, 1500);
+  timeoutID = window.setTimeout(waitForGameFalse, 1510);
+}
+
+
+////// GAME PLAY CODE ///////
+
+// turn function
+function nextTurn() {
+  if (turn === 1) {
+    turn = 2;
+  }
+  else if (turn === 2) {
+    turn = 1;
+  }
+}
+
+//display card image
+function showHideCardImage (cardObj, showOrHide) {
+  var cardID = "#card" + cardObj.cardLoc;
+  var cardImage = cardObj.cardImg;
+  if (showOrHide === "show"){
+    $(cardID).find('.flip-container').addClass('flip');
+  }
+  else if (showOrHide === "hide") {
+    $(cardID).find('.flip-container').removeClass('flip');
+  }
+}
+
+//hide cards after wrong guess
+function hideWrongCards(firstCardObject, secondCardObject) {
+  showHideCardImage (firstCardObject, "hide");
+  showHideCardImage (secondCardObject, "hide");
+}
+
+function hideCards () {
+  hideWrongCards(firstCardObj, secondCardObj);
+}
+
+//show composer info after correct guess
+function showComposerHeaderInfo () {
+  $('#composerHeaderHider').removeClass("hide");
+  $('#composerHeaderSubhead').html("you found...");
+  $('#composerName').html(memoryCardDeck[secondCardLoc - 1].cardName);
+  $('#learnMoreWrapper').removeClass("hide");
+}
+
+//preload "learn more" info
+function preloadComposerInfo () {
+  $('#composerNameInfo').html(secondCardObj.cardName);
+  $('#composerAudio').attr('src', secondCardObj.cardAudio);
+  $('#composerIframe').attr('src', secondCardObj.cardWiki);
+}
+
+//learn more button function
+function showComposerOverlayInfo () {
+  $('#composerHeaderHider').addClass("hide");
+  $('#composerInfoOverlay').removeClass("hide");
+  $('#restartWrapper').addClass('hide');
+  composerAudio.play(); //autoplay audio
+}
+
+//close composer info
+function closeComposerInfo () {
+  $('#composerInfoOverlay').addClass('hide');
+  $('#composerHeaderHider').removeClass("hide");
+  $('#restartWrapper').removeClass('hide');
+  composerAudio.pause(); //stop audio
+  composerAudio.currentTime = 0;
+}
+
+//check match
+function checkCardMatch (cardObj) {
+  if (turn === 1) {
+    firstCardLoc = $(cardObj).data('card');
+    firstCardName = memoryCardDeck[firstCardLoc - 1].cardName;
+
+    //save first card as object
+    firstCardObj = memoryCardDeck[firstCardLoc - 1];
+
+    //show first card...
+    showHideCardImage(firstCardObj, "show");
+    console.log("First Card Selection: " + firstCardName + "(" + firstCardLoc + ")");
+
+    nextTurn();
+    console.log("Turn: " + turn);
+  }
+
+  else if (turn === 2) {
+    secondCardLoc = $(cardObj).data('card');
+    secondCardName = memoryCardDeck[secondCardLoc - 1].cardName;
+
+    //save second card as object
+    secondCardObj = memoryCardDeck[secondCardLoc - 1];
+
+    //show second card...
+    showHideCardImage(secondCardObj, "show");
+    console.log("Second Card Selection: " + secondCardName + "(" + secondCardLoc + ")");
+
+    //probably don't need this "cardFound" check...
+    if (memoryCardDeck[firstCardLoc - 1].cardFound === true ||
+       memoryCardDeck[secondCardLoc - 1].cardFound === true ) {
+       console.log("One or both of these cards has already been found..");
+    }
+
+    else if (firstCardLoc === secondCardLoc) {
+      console.log("You picked the same card, dork!");
+    }
+
+    else if (firstCardName === secondCardName && firstCardLoc != secondCardLoc) {
+      console.log("You Found a Match!");
+
+      //show composer info
+      showComposerHeaderInfo();
+
+      //loads composer info for when "learn more" button is clicked
+      preloadComposerInfo();
+
+      //set "cardFound" booleans to true
+      memoryCardDeck[firstCardLoc - 1].cardFound = true;
+      memoryCardDeck[secondCardLoc - 1].cardFound = true;
+
+      //add to variable "cardsFound"
+      cardsFound += 1;
+      console.log("Cards Found: " + cardsFound);
+
+      nextTurn();
+      //console.log("Turn: " + turn);
+    }
+    else {
+      console.log("Not a Match... Try Again.");
+      waitForGame = true;
+      timeoutID = window.setTimeout(hideCards, 1000); // hide card images after delay
+      timeoutID = window.setTimeout(waitForGameFalse, 1000);
+      nextTurn();
+      //console.log("Turn: " + turn);
+    }
+    playerTotalTurns++;
+    $('#turnCounter').html("turn: " + (playerTotalTurns + 1) );
+  }
+}
+
+function checkWin() {
+  if((cardsFound * 2) != cardsInDeck){
+    return;
+  }
+  else {
+    for (i=0;i<10;i++){
+      console.log("You've cleared the game!!!");
+    }
+    $('#gameEndOverlay').removeClass("hide");
+    $('#composerHeaderHider').addClass("hide");
+    //tell how many turns to complete game..
+    $('#endGameTurnMessage').html("Completed in " + playerTotalTurns + " turns!");
+    $('#turnCounterWrapper').addClass("hide");
+  }
+}
+
+//evaluate the turn on card click
+$('.gameCard').click(function () {
+  if (waitForGame === true) {
+    console.log("You need to WAIT!");
+  }
+  else {
+    var cardObj = this;
+    var cardLocation = $(cardObj).data('card');
+    var currentCardObj = memoryCardDeck[cardLocation -1];
+
+    if (currentCardObj.cardFound === true) {
+      console.log("Card already found!");
+      console.log("Turn: " + turn);
+    }
+    else {
+      checkCardMatch(cardObj);
+    }
+  }
+  checkWin();
+});
+
+</script>
+</body>
+</html>
