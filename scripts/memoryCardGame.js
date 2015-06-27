@@ -529,4 +529,8 @@ $(document).ready(function() {
     newGame();
   });
 
+  $('#closeInfo').on('click', function() {
+    closeComposerInfo();
+  });
+
 });
