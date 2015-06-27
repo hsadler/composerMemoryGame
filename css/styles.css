@@ -1,0 +1,193 @@
+body {
+  background-image: url('../images/binding_dark.png');
+}
+
+iframe {
+  width: 100%;
+  height: 550px;
+}
+
+.button-blue {
+  color: white;
+  background: #3BA6C7;
+}
+
+
+/****GAME CSS ****/
+#gameStartOverlay, #gameEndOverlay, #composerInfoOverlay {
+  position:fixed;
+  top:0;
+  left:0;
+  background:rgba(0,0,0,0.7);
+  z-index:5;
+  width:100%;
+  height:100%;
+  padding: 30px 0 0 0;
+}
+
+#gameStartOverlay p, #gameStartOverlay h1,
+#gameEndOverlay p, #gameEndOverlay h1,
+#composerInfoOverlay p, #composerInfoOverlay h1 {
+  text-align: center;
+  color: white;
+}
+
+#gameStartOverlay h1, #gameEndOverlay h1,
+#composerInfoOverlay h1 {
+  font-size: 50px;
+  margin: 48px 10px 0 10px;
+}
+
+#gameStartOverlay p, #gameEndOverlay p,
+#composerInfoOverlay p {
+  margin: 30px 40px 40px 40px;
+}
+
+#gameStartOverlay input, #gameEndOverlay input /*#composerInfoOverlay input*/
+{
+  display: block;
+  margin: 0 auto;
+  font-size: 34px;
+  padding: 20px 30px;
+}
+
+#cardGameWrapper, #composerIframeWrapper {
+  max-width: 655px;
+  margin: 30px auto 0 auto;
+}
+
+#gameBoard {
+  border: 1px solid gray;
+  border-radius: 28px;
+  background: #E0EEEE;
+  border-spacing: 10px;
+  border-collapse: separate;
+  margin: 30px auto 0 auto;
+  padding: 10px;
+}
+
+#gameBoard td {
+  width: 88px;
+  height: 88px;
+  background-size: 90px;
+  background-repeat: no-repeat;
+  border-radius: 20px;
+}
+
+#gameBoard td:hover {
+  cursor: pointer;
+  box-shadow: 0px 1px 2px 1px rgba(0,0,0,0.5);
+}
+
+#gameHeaderWrapper {
+  width: 100%;
+  height: 150px;
+  padding: 30px 0 6px 0;
+}
+
+#gameHeaderWrapper h1, #gameHeaderWrapper p {
+  color: white;
+  text-align: center;
+  margin: 0px auto 0 auto;
+}
+
+#gameHeaderWrapper h1 {
+  font-size: 50px;
+}
+
+#composerLearnMore { /*learn more button*/
+  font-size: 15px;
+  display: block;
+  margin: 22px auto;
+  padding: 14px;
+}
+
+#composerAudioWrapper {
+  text-align: center;
+  margin: 30px 0 20px 0;
+}
+
+#composerAudio {
+  display: inline-block;
+  text-align: center;
+}
+
+#restartGameLink, #closeInfo {
+  text-align: center;
+  margin: 20px auto 0 auto;
+  font-size: 15px;
+  color: white;
+  display: block;
+}
+
+#closeInfo {
+  padding: 14px;
+}
+
+#turnCounter {
+  position: absolute;
+  color: white;
+  left: 5px;
+  top: 5px;
+  font-size: 11px;
+  letter-spacing: .5px;
+}
+
+
+/**** FLIP CSS ****/
+/* entire container, keeps perspective */
+.flip-container {
+  -webkit-perspective: 1000;
+          perspective: 1000;
+  display: block;
+}
+
+/* flip the pane when given class "flip" */
+.flip-container.flip .flipper {
+  -webkit-transform: rotateY(180deg);
+          transform: rotateY(180deg);
+}
+
+.flip-container, .card-front, .card-back {
+  width: 88px;
+  height: 88px;
+}
+
+/* flip speed goes here */
+.flipper {
+  -webkit-transition: 0.4s;
+          transition: 0.4s;
+  -webkit-transform-style: preserve-3d;
+          transform-style: preserve-3d;
+  position: relative;
+}
+
+/* hide back of pane during swap */
+.card-front, .card-back {
+  border-radius: 20px;
+  -webkit-backface-visibility: hidden;
+          backface-visibility: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-size: 90px;
+  background-repeat: no-repeat;
+}
+
+/* front pane, placed above back */
+.card-front {
+  z-index: 2;
+  -webkit-transform: rotateY(0deg);
+          transform: rotateY(0deg);
+}
+
+/* back, initially hidden pane */
+.card-back {
+  -webkit-transform: rotateY(180deg);
+          transform: rotateY(180deg);
+}
+
+/**** UTILITY CSS ****/
+.hide {
+  display: none;
+}
